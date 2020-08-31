@@ -1,0 +1,4 @@
+build/
+.clangd/
+sdkconfig
+sdkconfig.old
