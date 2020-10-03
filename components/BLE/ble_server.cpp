@@ -1,7 +1,10 @@
+// System headers
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 
+//Other Component headers
 extern "C" {
 #include "esp_bt.h"
 #include "esp_bt_defs.h"
@@ -17,9 +20,10 @@ extern "C" {
 #include "nvs_flash.h"
 #include "sdkconfig.h"
 }
+// Own component header
 #include <ble_server.hpp>
-#include <iostream>
 
+// Static defines
 static constexpr const char *FILE_TAG = "BLE_SERVER";
 static constexpr int adv_config_flag = (1 << 0);
 static constexpr int scan_rsp_config_flag = (1 << 1);
@@ -87,6 +91,8 @@ static esp_attr_value_t gatts_demo_char1_val = {
     .attr_len = sizeof(char1_str),
     .attr_value = char1_str,
 };
+
+//Class impl
 
 std::vector<BLEService *> BLEServer::m_services = {};
 std::map<uint8_t, BLEService *> BLEServer::m_service_ptr{};

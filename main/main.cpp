@@ -1,4 +1,5 @@
 extern "C" {
+#include "esp_log.h"
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -8,7 +9,7 @@ extern "C" {
 #include "ble_server.hpp"
 #include "display.hpp"
 
-//static defines
+// static defines
 static constexpr const char *FILE_TAG = "MAIN";
 
 extern "C" void app_main(void) {
@@ -30,4 +31,10 @@ extern "C" void app_main(void) {
     ESP_LOGE(FILE_TAG, "%s Service startup failed: %s\n", __func__,
              esp_err_to_name(ret));
   }
+  // TFTDisp disp{};
+  ret = TFTDisp::init();
+  if (ret) {
+    ESP_LOGE(FILE_TAG, "TFT display init failed %s\n", esp_err_to_name(ret));
+  }
+  TFTDisp::drawCheck();
 }
