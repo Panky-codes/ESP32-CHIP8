@@ -1,45 +1,33 @@
-/* Hello World Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-#include "display.hpp"
 extern "C" {
-#include <stdio.h>
-#include "esp_spi_flash.h"
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "sdkconfig.h"
+#include <stdio.h>
 }
+#include "ble_server.hpp"
+#include "display.hpp"
+
+//static defines
+static constexpr const char *FILE_TAG = "MAIN";
 
 extern "C" void app_main(void) {
-    print_hello();
-
-    /* Print chip information */
-    esp_chip_info_t chip_info;
-    esp_chip_info(&chip_info);
-    printf("This is %s chip with %d CPU cores, WiFi%s%s, ", CONFIG_IDF_TARGET,
-           chip_info.cores, (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-           (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
-
-    printf("silicon revision %d, ", chip_info.revision);
-
-    printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
-           (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded"
-                                                         : "external");
-
-    printf("Minimum free heap size: %d bytes\n",
-           esp_get_minimum_free_heap_size());
-
-    for (int i = 10; i >= 0; i--) {
-        printf("Restarting in %d seconds...\n", i);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-    printf("Restarting now.\n");
-    fflush(stdout);
-    esp_restart();
+  esp_err_t ret = ESP_OK;
+  BLEServer *ble = new BLEServer();
+  BLEService *service_p = new BLEService{"ESP"};
+  ret = ble->init();
+  if (ret) {
+    ESP_LOGE(FILE_TAG, "%s BLE INIT failed: %s\n", __func__,
+             esp_err_to_name(ret));
+  }
+  ret = ble->addService(service_p);
+  if (ret) {
+    ESP_LOGE(FILE_TAG, "%s Service setup failed: %s\n", __func__,
+             esp_err_to_name(ret));
+  }
+  ret = ble->startService();
+  if (ret) {
+    ESP_LOGE(FILE_TAG, "%s Service startup failed: %s\n", __func__,
+             esp_err_to_name(ret));
+  }
 }

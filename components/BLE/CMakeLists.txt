@@ -1,2 +1,3 @@
-idf_component_register(SRCS "ble.cpp"
-                  INCLUDE_DIRS ".")
+idf_component_register(SRCS "ble_server.cpp"
+                  INCLUDE_DIRS "."
+                  REQUIRES bt )
