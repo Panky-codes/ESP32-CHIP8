@@ -14,6 +14,8 @@ static constexpr const char *FILE_TAG = "MAIN";
 
 extern "C" void app_main(void) {
   esp_err_t ret = ESP_OK;
+  // I know this is a memory leak, but the lifetime of 
+  // the BLE server should last till the lifetime of BLE(bluedroid)
   BLEServer *ble = new BLEServer();
   BLEService *service_p = new BLEService{"ESP"};
   ret = ble->init();
