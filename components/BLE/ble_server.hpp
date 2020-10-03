@@ -56,14 +56,11 @@ public:
 private:
   std::string m_service_name;
   xQueueHandle m_queue_handle;
-  // TODO: Find out why this var works only when it is static
-  // static gatts_profile_inst m_profile;
-  //   static esp_gatt_char_prop_t m_char_prop;
   gatts_profile_inst m_profile;
   //   esp_gatt_char_prop_t m_char_prop;
 };
 
-//TODO: Change this into a singleton class
+// TODO: Change this into a singleton class
 class BLEServer {
 public:
   BLEServer() = default;
@@ -79,6 +76,7 @@ private:
                                 esp_ble_gap_cb_param_t *param);
   BLEService *m_service;
   static std::vector<BLEService *> m_services;
+  static std::map<uint8_t, BLEService *> m_service_ptr;
   static uint8_t adv_config_done;
 };
 
