@@ -31,7 +31,7 @@ static constexpr int GATTS_NUM_HANDLE_TEST_A = 4;
 static constexpr const char *TEST_DEVICE_NAME = "ESP_CHIP8 VM";
 static constexpr int TEST_MANUFACTURER_DATA_LEN = 17;
 
-static std::map<uint8_t, BLEService *> m_service_ptr;
+// static std::map<uint8_t, BLEService *> m_service_ptr;
 
 static esp_ble_adv_data_t adv_data = {
     .set_scan_rsp = false,
@@ -89,6 +89,7 @@ static esp_attr_value_t gatts_demo_char1_val = {
 };
 
 std::vector<BLEService *> BLEServer::m_services = {};
+std::map<uint8_t, BLEService *> BLEServer::m_service_ptr{};
 
 [[nodiscard]] esp_err_t BLEServer::init() {
   esp_err_t ret = ESP_OK;
