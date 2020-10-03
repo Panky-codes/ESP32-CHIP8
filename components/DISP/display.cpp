@@ -13,10 +13,6 @@ extern "C" {
 static constexpr const char *FILE_TAG = "DISP";
 static constexpr const spi_lobo_host_device_t SPI_BUS = TFT_HSPI_HOST;
 
-void TFTDisp::print_hello() {
-  std::string yo{"HEHEHEHE!!"};
-  printf("Hello world! %s!! \n", yo.c_str());
-}
 
 [[nodiscard]] esp_err_t TFTDisp::init() {
   esp_err_t ret;
