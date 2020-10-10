@@ -100,10 +100,10 @@ void chip8::load_memory(const std::vector<uint8_t> &rom_opcodes) {
               memory.begin() + prog_mem_begin);
 }
 
-void chip8::load_memory(const std::string &file_name) {
+void chip8::load_memory(std::string_view file_name) {
   std::ifstream file;
   std::vector<char> rom;
-  file.open(file_name.c_str(), std::ios::binary | std::ios::ate);
+  file.open(file_name.data(), std::ios::binary | std::ios::ate);
 
   if (file.is_open()) {
     std::streampos size = file.tellg();
@@ -112,7 +112,7 @@ void chip8::load_memory(const std::string &file_name) {
     file.read(rom.data(), size);
     file.close();
   } else {
-    ESP_LOGD(FILE_TAG, "Given filename %s does not exist!", file_name.c_str());
+    ESP_LOGE(FILE_TAG, "Given filename %s does not exist!", file_name.data());
     abort();
   }
   std::copy_n(rom.begin(), rom.size(), memory.begin() + prog_mem_begin);

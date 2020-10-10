@@ -1,4 +1,4 @@
-menu "SPIFFS ADDR INFO"
+menu "SPIFFS INFO"
 
 config SPIFFS_BASE_ADDR
     int "SPIFFS Base address"
@@ -22,6 +22,11 @@ config SPIFFS_LOG_PAGE_SIZE
     range 256 2048
     default 256
     help
-	Set it to the physical page size og the used SPI Flash chip.
+    Set it to the physical page size og the used SPI Flash chip.
+config SPIFFS_BASE_DIR
+    string "SPIFFS base directory name"
+    default "/spiffs"
+    help
+        This name will be used to mount the SPIFFS
 
 endmenu

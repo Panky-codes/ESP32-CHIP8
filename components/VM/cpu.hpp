@@ -6,6 +6,7 @@
 #include <memory>
 #include <stack>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "keyboard.hpp"
@@ -16,7 +17,7 @@ public:
   chip8();
   explicit chip8(std::unique_ptr<keyboard> keyPtr);
   void load_memory(const std::vector<uint8_t> &rom_opcodes);
-  void load_memory(const std::string &file_name);
+  void load_memory(std::string_view file_name);
   void reset();
   void step_one_cycle();
   [[nodiscard]] std::array<uint8_t, 16> get_V_registers() const;

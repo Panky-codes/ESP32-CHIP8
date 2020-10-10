@@ -1,11 +1,13 @@
 extern "C" {
 #include "esp_log.h"
+#include "esp_spiffs.h"
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "sdkconfig.h"
 }
 #include <algorithm>
+#include <string>
 #include <cstdio>
 #include <fstream>
 #include <random>
@@ -18,6 +20,7 @@ extern "C" {
 
 // static defines
 static constexpr const char *FILE_TAG = "CHIP8";
+static constexpr const char *TEST_ROM = "/test_opcode.ch8";
 
 // Setup BT, disp
 [[nodiscard]] static esp_err_t ble_setup() {
@@ -44,25 +47,45 @@ static constexpr const char *FILE_TAG = "CHIP8";
   }
   return ret;
 }
+[[nodiscard]] static esp_err_t setup_fs() {
+  ESP_LOGI(FILE_TAG, "Initializing SPIFFS");
+
+  esp_vfs_spiffs_conf_t conf = {.base_path = CONFIG_SPIFFS_BASE_DIR,
+                                .partition_label = NULL,
+                                .max_files = 5,
+                                .format_if_mount_failed = false};
+  esp_err_t ret = esp_vfs_spiffs_register(&conf);
+
+  if (ret != ESP_OK) {
+    if (ret == ESP_FAIL) {
+      ESP_LOGE(FILE_TAG, "Failed to mount or format filesystem");
+    } else if (ret == ESP_ERR_NOT_FOUND) {
+      ESP_LOGE(FILE_TAG, "Failed to find SPIFFS partition");
+    } else {
+      ESP_LOGE(FILE_TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+    }
+    return ret;
+  }
+  return ret;
+}
 
 // [[nodiscard]] static esp_err_t select_option() {}
 
-//Input could be the game
+// Input could be the game, Queuehandle
 static void start(void *params) {
-  std::vector<uint8_t> rom{0x61, 0x32};
   chip8 emulator;
-  emulator.load_memory(rom);
-  auto initial_pc = emulator.get_prog_counter();
+  std::string rom_file = CONFIG_SPIFFS_BASE_DIR; 
+  rom_file += TEST_ROM;
+  emulator.load_memory(rom_file);
   emulator.step_one_cycle();
-  // auto actual_V = emulator.get_V_registers();
-  // auto final_pc = emulator.get_prog_counter();
-  printf("%d", initial_pc);
+  emulator.step_one_cycle();
   while (1) {
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     ESP_LOGI(FILE_TAG, "I am alive");
   }
 }
 
+//TODO: If the initial conditions, return to main
 [[nodiscard]] esp_err_t CHIP8::run() {
   esp_err_t ret = ESP_OK;
   ret = TFTDisp::init();
@@ -73,6 +96,7 @@ static void start(void *params) {
   if (ret) {
     ESP_LOGE(FILE_TAG, "%s BLE Setup failed", __func__);
   }
+  ret = setup_fs();
   TFTDisp::drawCheck();
   xTaskCreatePinnedToCore(start, "CHIP8", 20000, NULL, 1, NULL, 1);
   return ret;
