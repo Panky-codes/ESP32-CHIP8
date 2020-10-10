@@ -52,11 +52,13 @@ public:
                                      esp_gatt_if_t gatts_if,
                                      esp_ble_gatts_cb_param_t *param);
   xQueueHandle getQueueHandle();
+  bool isDeviceConnected();
 
 private:
   std::string m_service_name;
   xQueueHandle m_queue_handle;
   gatts_profile_inst m_profile;
+  bool is_device_connected;
   //   esp_gatt_char_prop_t m_char_prop;
 };
 

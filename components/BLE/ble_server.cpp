@@ -4,7 +4,7 @@
 #include <cstring>
 #include <iostream>
 
-//Other Component headers
+// Other Component headers
 extern "C" {
 #include "esp_bt.h"
 #include "esp_bt_defs.h"
@@ -92,7 +92,7 @@ static esp_attr_value_t gatts_demo_char1_val = {
     .attr_value = char1_str,
 };
 
-//Class impl
+// Class impl
 
 std::vector<BLEService *> BLEServer::m_services = {};
 std::map<uint8_t, BLEService *> BLEServer::m_service_ptr{};
@@ -200,11 +200,13 @@ esp_err_t BLEServer::addService(BLEService *service) {
 }
 
 BLEService::BLEService(const std::string &service_name)
-    : m_service_name{service_name} {
+    : m_service_name{service_name}, is_device_connected{false} {
   m_queue_handle = xQueueCreate(5, sizeof(uint8_t));
   m_profile = {};
   // m_char_prop = 0;
 }
+
+bool BLEService::isDeviceConnected() { return is_device_connected; }
 
 void BLEService::onRead(uint8_t value) {
   const char *str = m_service_name.c_str();
@@ -430,6 +432,7 @@ void BLEService::gatts_profile_a_event_handler(
   case ESP_GATTS_STOP_EVT:
     break;
   case ESP_GATTS_CONNECT_EVT: {
+    is_device_connected = true;
     esp_ble_conn_update_params_t conn_params = {0};
     memcpy(conn_params.bda, param->connect.remote_bda, sizeof(esp_bd_addr_t));
     /* For the IOS system, please reference the apple official

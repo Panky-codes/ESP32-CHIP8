@@ -22,7 +22,6 @@ public:
   [[nodiscard]] std::array<uint8_t, 16> get_V_registers() const;
   [[nodiscard]] std::array<bool, 16> get_Keys_array() const;
   [[nodiscard]] std::array<uint8_t, 4096> get_memory_dump() const;
-  // [[nodiscard]] std::array<uint8_t, 40> get_memory_dump() const;
   [[nodiscard]] std::array<uint8_t, display_size> get_display_pixels() const;
   [[nodiscard]] uint16_t get_prog_counter() const;
   [[nodiscard]] uint8_t get_delay_counter() const;
@@ -34,7 +33,6 @@ public:
 
 private:
   std::array<uint8_t, 4096> memory{0};
-  // std::array<uint8_t, 40> memory{0};
   std::array<uint8_t, 16> V{0};
   std::stack<uint16_t> hw_stack;
   std::array<uint8_t, display_size> display{0};
