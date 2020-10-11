@@ -7,10 +7,10 @@ extern "C" {
 #include "sdkconfig.h"
 }
 #include <algorithm>
-#include <string>
 #include <cstdio>
 #include <fstream>
 #include <random>
+#include <string>
 
 #include "ble_server.hpp"
 #include "chip8.hpp"
@@ -62,7 +62,8 @@ static constexpr const char *TEST_ROM = "/test_opcode.ch8";
     } else if (ret == ESP_ERR_NOT_FOUND) {
       ESP_LOGE(FILE_TAG, "Failed to find SPIFFS partition");
     } else {
-      ESP_LOGE(FILE_TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+      ESP_LOGE(FILE_TAG, "Failed to initialize SPIFFS (%s)",
+               esp_err_to_name(ret));
     }
     return ret;
   }
@@ -74,18 +75,22 @@ static constexpr const char *TEST_ROM = "/test_opcode.ch8";
 // Input could be the game, Queuehandle
 static void start(void *params) {
   chip8 emulator;
-  std::string rom_file = CONFIG_SPIFFS_BASE_DIR; 
+  std::string rom_file = CONFIG_SPIFFS_BASE_DIR;
   rom_file += TEST_ROM;
   emulator.load_memory(rom_file);
-  emulator.step_one_cycle();
-  emulator.step_one_cycle();
+  TFTDisp::clearScreen();
   while (1) {
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    ESP_LOGI(FILE_TAG, "I am alive");
+    emulator.step_one_cycle();
+    //To avoid drawing in every cycle
+    if (emulator.get_display_flag()) {
+      TFTDisp::drawGfx(emulator.get_display_pixels());
+    }
+    // Need to find a better solution for watchdog
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
-//TODO: If the initial conditions, return to main
+// TODO: If the initial conditions, return to main
 [[nodiscard]] esp_err_t CHIP8::run() {
   esp_err_t ret = ESP_OK;
   ret = TFTDisp::init();
@@ -98,6 +103,6 @@ static void start(void *params) {
   }
   ret = setup_fs();
   TFTDisp::drawCheck();
-  xTaskCreatePinnedToCore(start, "CHIP8", 20000, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(start, "CHIP8", 20000, NULL, 5, NULL, 1);
   return ret;
 }

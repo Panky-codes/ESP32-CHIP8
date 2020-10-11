@@ -14,6 +14,7 @@ static constexpr int display_size = display_x * display_y;
 namespace TFTDisp {
 [[nodiscard]] esp_err_t init();
 void drawCheck();
-esp_err_t drawGfx(const std::array<uint8_t, display_size> &gfx);
+void clearScreen();
+void drawGfx(const std::array<uint8_t, display_size> &gfx);
 } // namespace TFTDisp
 #endif // !DISPLAY_HPP_

@@ -23,7 +23,7 @@ public:
   [[nodiscard]] std::array<uint8_t, 16> get_V_registers() const;
   [[nodiscard]] std::array<bool, 16> get_Keys_array() const;
   [[nodiscard]] std::array<uint8_t, 4096> get_memory_dump() const;
-  [[nodiscard]] std::array<uint8_t, display_size> get_display_pixels() const;
+  [[nodiscard]] const std::array<uint8_t, display_size>& get_display_pixels() const;
   [[nodiscard]] uint16_t get_prog_counter() const;
   [[nodiscard]] uint8_t get_delay_counter() const;
   [[nodiscard]] uint8_t get_sound_counter() const;

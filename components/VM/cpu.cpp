@@ -121,7 +121,6 @@ void chip8::load_memory(std::string_view file_name) {
 std::array<uint8_t, 16> chip8::get_V_registers() const { return V; }
 std::array<bool, 16> chip8::get_Keys_array() const { return Keys; }
 std::array<uint8_t, 4096> chip8::get_memory_dump() const { return memory; }
-// std::array<uint8_t, 40> chip8::get_memory_dump() const { return memory; }
 std::stack<uint16_t> chip8::get_stack() const { return hw_stack; }
 
 uint16_t chip8::get_prog_counter() const { return prog_counter; }
@@ -130,8 +129,8 @@ uint8_t chip8::get_sound_counter() const { return sound_timer; }
 std::string chip8::get_instruction() const { return instruction; }
 uint16_t chip8::get_I_register() const { return I; }
 bool chip8::get_display_flag() const { return isDisplaySet; }
-// TODO: Return by reference!
-std::array<uint8_t, display_size> chip8::get_display_pixels() const {
+
+const std::array<uint8_t, display_size> &chip8::get_display_pixels() const {
   return display;
 }
 

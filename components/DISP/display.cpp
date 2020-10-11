@@ -1,9 +1,11 @@
 #include <cstdlib>
 #include <string>
+#include <utility>
 
 extern "C" {
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "sdkconfig.h"
 #include "tft.h"
 #include "tftspi.h"
 }
@@ -12,23 +14,27 @@ extern "C" {
 // static defines
 static constexpr const char *FILE_TAG = "DISP";
 static constexpr const spi_lobo_host_device_t SPI_BUS = TFT_HSPI_HOST;
+static constexpr int scale = 4;
 
+/*
+This function changes the reference axis based on the display midpoint in ILI9341 display which 
+has a width of 240 pixels and height of 320 pixels
+The formula is as follows:
+x in new ref axis = (TFT_WIDTH/2) + scale/2 * 32 - 4*y
+y in new ref axis = (TFT_HEIGHT/2) - scale/2 * 32 + 4*x
+*/
+static std::pair<int, int> transpose_xy(const int x, const int y) {
+  const auto transposed_x =
+      (CONFIG_TFT_DISPLAY_WIDTH / 2) + ((scale / 2) * 32) - (4 * y);
+  const auto transposed_y =
+      (CONFIG_TFT_DISPLAY_HEIGHT / 2) - ((scale / 2) * 64) + (4 * x);
+
+  return {transposed_x, transposed_y};
+}
 
 [[nodiscard]] esp_err_t TFTDisp::init() {
   esp_err_t ret;
 
-  // === SET GLOBAL VARIABLES ==========================
-
-  // ===================================================
-  // ==== Set maximum spi clock for display read    ====
-  //      operations, function 'find_rd_speed()'    ====
-  //      can be used after display initialization  ====
-  tft_max_rdclock = 8000000;
-  // ===================================================
-
-  // ====================================================================
-  // === Pins MUST be initialized before SPI interface initialization ===
-  // ====================================================================
   TFT_PinsInit();
 
   // ====  CONFIGURE SPI DEVICES(s)
@@ -74,8 +80,6 @@ static constexpr const spi_lobo_host_device_t SPI_BUS = TFT_HSPI_HOST;
   // ==== Initialize the Display ====
 
   TFT_display_init();
-  // ---- Detect maximum read speed ----
-  tft_max_rdclock = find_rd_speed();
 
   // ==== Set SPI clock used for display operations ====
   spi_lobo_set_speed(spi, DEFAULT_SPI_CLOCK);
@@ -94,7 +98,22 @@ static constexpr const spi_lobo_host_device_t SPI_BUS = TFT_HSPI_HOST;
   return ret;
 }
 
+void TFTDisp::clearScreen() { TFT_fillScreen(TFT_BLACK); }
 void TFTDisp::drawCheck() {
   TFT_setFont(DEFAULT_FONT, NULL);
   TFT_print("CHIP8 DISPLAY CHECK", CENTER, CENTER);
+  TFT_fillRect(0, 0, 4, 4, TFT_GREEN);
+  TFT_drawRect(0, 0, 4, 4, TFT_GREEN);
+}
+
+void TFTDisp::drawGfx(const std::array<uint8_t, display_size> &gfx) {
+  for (uint y = 0; y < display_y; ++y) {
+    for (uint x = 0; x < display_x; ++x) {
+      if ((gfx.at(x + (display_x * y)) == 1)) {
+        const auto [new_x, new_y] = transpose_xy(x, y);
+        TFT_fillRect(new_x, new_y, 4, 4, TFT_GREEN);
+        TFT_drawRect(new_x, new_y, 4, 4, TFT_GREEN);
+      }
+    }
+  }
 }
