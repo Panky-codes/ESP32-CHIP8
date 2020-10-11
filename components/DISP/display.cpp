@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <string>
 #include <utility>
+#include <bitset>
 
 extern "C" {
 #include "freertos/FreeRTOS.h"
@@ -13,15 +14,15 @@ extern "C" {
 
 // static defines
 static constexpr const char *FILE_TAG = "DISP";
+//TODO: Change all the static to be a part of class var
 static constexpr const spi_lobo_host_device_t SPI_BUS = TFT_HSPI_HOST;
 static constexpr int scale = 4;
-
+static std::bitset<display_size> disp_cache{0};
 /*
-This function changes the reference axis based on the display midpoint in ILI9341 display which 
-has a width of 240 pixels and height of 320 pixels
-The formula is as follows:
-x in new ref axis = (TFT_WIDTH/2) + scale/2 * 32 - 4*y
-y in new ref axis = (TFT_HEIGHT/2) - scale/2 * 32 + 4*x
+This function changes the reference axis based on the display midpoint in
+ILI9341 display which has a width of 240 pixels and height of 320 pixels The
+formula is as follows: x in new ref axis = (TFT_WIDTH/2) + scale/2 * 32 - 4*y y
+in new ref axis = (TFT_HEIGHT/2) - scale/2 * 32 + 4*x
 */
 static std::pair<int, int> transpose_xy(const int x, const int y) {
   const auto transposed_x =
@@ -109,10 +110,13 @@ void TFTDisp::drawCheck() {
 void TFTDisp::drawGfx(const std::array<uint8_t, display_size> &gfx) {
   for (uint y = 0; y < display_y; ++y) {
     for (uint x = 0; x < display_x; ++x) {
+      const auto [new_x, new_y] = transpose_xy(x, y);
       if ((gfx.at(x + (display_x * y)) == 1)) {
-        const auto [new_x, new_y] = transpose_xy(x, y);
         TFT_fillRect(new_x, new_y, 4, 4, TFT_GREEN);
         TFT_drawRect(new_x, new_y, 4, 4, TFT_GREEN);
+      } else {
+        TFT_fillRect(new_x, new_y, 4, 4, tft_bg);
+        TFT_drawRect(new_x, new_y, 4, 4, tft_bg);
       }
     }
   }

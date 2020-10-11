@@ -20,7 +20,7 @@ extern "C" {
 
 // static defines
 static constexpr const char *FILE_TAG = "CHIP8";
-static constexpr const char *TEST_ROM = "/test_opcode.ch8";
+static constexpr const char *TEST_ROM[] = {"/test_opcode.ch8", "/pong.ch8"};
 
 // Setup BT, disp
 [[nodiscard]] static esp_err_t ble_setup() {
@@ -76,7 +76,7 @@ static constexpr const char *TEST_ROM = "/test_opcode.ch8";
 static void start(void *params) {
   chip8 emulator;
   std::string rom_file = CONFIG_SPIFFS_BASE_DIR;
-  rom_file += TEST_ROM;
+  rom_file += TEST_ROM[0];
   emulator.load_memory(rom_file);
   TFTDisp::clearScreen();
   while (1) {
@@ -85,8 +85,9 @@ static void start(void *params) {
     if (emulator.get_display_flag()) {
       TFTDisp::drawGfx(emulator.get_display_pixels());
     }
-    // Need to find a better solution for watchdog
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    // Can do a yield(Faster) or task delay to avoid watchdog timeout
+    taskYIELD();
+    // vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
