@@ -76,7 +76,7 @@ static constexpr const char *TEST_ROM[] = {"/test_opcode.ch8", "/pong.ch8"};
 static void start(void *params) {
   chip8 emulator;
   std::string rom_file = CONFIG_SPIFFS_BASE_DIR;
-  rom_file += TEST_ROM[0];
+  rom_file += TEST_ROM[1];
   emulator.load_memory(rom_file);
   TFTDisp::clearScreen();
   while (1) {

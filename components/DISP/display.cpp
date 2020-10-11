@@ -1,7 +1,7 @@
+#include <bitset>
 #include <cstdlib>
 #include <string>
 #include <utility>
-#include <bitset>
 
 extern "C" {
 #include "freertos/FreeRTOS.h"
@@ -14,7 +14,7 @@ extern "C" {
 
 // static defines
 static constexpr const char *FILE_TAG = "DISP";
-//TODO: Change all the static to be a part of class var
+// TODO: Change all the static to be a part of class var
 static constexpr const spi_lobo_host_device_t SPI_BUS = TFT_HSPI_HOST;
 static constexpr int scale = 4;
 static std::bitset<display_size> disp_cache{0};
@@ -111,12 +111,12 @@ void TFTDisp::drawGfx(const std::array<uint8_t, display_size> &gfx) {
   for (uint y = 0; y < display_y; ++y) {
     for (uint x = 0; x < display_x; ++x) {
       const auto [new_x, new_y] = transpose_xy(x, y);
-      if ((gfx.at(x + (display_x * y)) == 1)) {
-        TFT_fillRect(new_x, new_y, 4, 4, TFT_GREEN);
-        TFT_drawRect(new_x, new_y, 4, 4, TFT_GREEN);
-      } else {
-        TFT_fillRect(new_x, new_y, 4, 4, tft_bg);
-        TFT_drawRect(new_x, new_y, 4, 4, tft_bg);
+      const auto index_distance = x + (display_x * y);
+      const color_t color = (gfx.at(index_distance) == 1) ? TFT_GREEN : tft_bg;
+      if ((gfx.at(index_distance) ^ disp_cache[index_distance])) {
+        disp_cache.set(index_distance, bool(gfx.at(index_distance)));
+        TFT_fillRect(new_x, new_y, 4, 4, color);
+        TFT_drawRect(new_x, new_y, 4, 4, color);
       }
     }
   }
