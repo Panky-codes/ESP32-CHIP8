@@ -8,5 +8,6 @@ I tested my implementation of OPCODES with the test ROM from [here](https://gith
   <img src="doc/first_look.jpg" width="30%" height="30%"/>  
 </p>
 ## TODO
- - [ ] Finish up keyboard implementation
- - [ ] Make a startup screen
+
+- [ ] Finish up keyboard implementation
+- [ ] Make a startup screen
