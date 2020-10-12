@@ -7,6 +7,7 @@ I tested my implementation of OPCODES with the test ROM from [here](https://gith
 <p align="center">
   <img src="doc/first_look.jpg" width="30%" height="30%"/>  
 </p>
+
 ## TODO
 
 - [ ] Finish up keyboard implementation
