@@ -89,7 +89,7 @@ static void start(void *params) {
     }
     // Can do a yield(Faster) or task delay to avoid watchdog timeout
     /* taskYIELD(); */
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(2 / portTICK_PERIOD_MS);
   }
 }
 
