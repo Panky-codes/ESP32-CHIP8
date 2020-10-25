@@ -23,7 +23,7 @@ static constexpr const char *FILE_TAG = "CHIP8";
 static constexpr const char *TEST_ROM[] = {"/test_opcode.ch8", "/pong.ch8"};
 static constexpr int ROM_SELECTION = 1;
 // Setup BT, disp
-[[nodiscard]] static esp_err_t ble_setup() {
+[[nodiscard]] static esp_err_t ble_setup(xQueueHandle& numpad) {
   esp_err_t ret = ESP_OK;
   // I know this is a memory leak, but the lifetime of
   // the BLE server should last for the complete lifetime of BLE(bluedroid)
@@ -44,6 +44,7 @@ static constexpr int ROM_SELECTION = 1;
     ESP_LOGE(FILE_TAG, "%s Service startup failed: %s\n", __func__,
              esp_err_to_name(ret));
   }
+  numpad = service_p->getQueueHandle();
   return ret;
 }
 [[nodiscard]] static esp_err_t setup_fs() {
@@ -73,7 +74,9 @@ static constexpr int ROM_SELECTION = 1;
 
 // Input could be the game, Queuehandle
 static void start(void *params) {
-  chip8 emulator;
+  xQueueHandle numpad_queue = params;
+  std::unique_ptr<keyboard> numpad = std::make_unique<keyboard>(numpad_queue);
+  chip8 emulator{std::move(numpad)};
   std::string rom_file = CONFIG_SPIFFS_BASE_DIR;
   rom_file += TEST_ROM[ROM_SELECTION];
   emulator.load_memory(rom_file);
@@ -93,17 +96,18 @@ static void start(void *params) {
 // TODO: If the initial conditions, return to main
 [[nodiscard]] esp_err_t CHIP8::run() {
   esp_err_t ret = ESP_OK;
+  xQueueHandle numpad;
   ret = TFTDisp::init();
   if (ret) {
     ESP_LOGE(FILE_TAG, "TFT display init failed %s\n", esp_err_to_name(ret));
   }
-  /* ret = ble_setup(); */
-  /* if (ret) { */
-  /*     ESP_LOGE(FILE_TAG, "%s BLE Setup failed", __func__); */
-  /* } */
+  ret = ble_setup(numpad);
+  if (ret) {
+    ESP_LOGE(FILE_TAG, "%s BLE Setup failed", __func__);
+  }
   ret = setup_fs();
   TFTDisp::drawCheck();
-  xTaskCreatePinnedToCore(start, "CHIP8", 20000, NULL, configMAX_PRIORITIES - 1,
+  xTaskCreatePinnedToCore(start, "CHIP8", 20000, numpad, configMAX_PRIORITIES - 1,
                           NULL, 1);
   return ret;
 }
