@@ -21,10 +21,9 @@ extern "C" {
 // static defines
 static constexpr const char *FILE_TAG = "CHIP8";
 static constexpr const char *TEST_ROM[] = {"/test_opcode.ch8", "/pong.ch8"};
-
+static constexpr int ROM_SELECTION = 1;
 // Setup BT, disp
 [[nodiscard]] static esp_err_t ble_setup() {
-
   esp_err_t ret = ESP_OK;
   // I know this is a memory leak, but the lifetime of
   // the BLE server should last for the complete lifetime of BLE(bluedroid)
@@ -76,18 +75,18 @@ static constexpr const char *TEST_ROM[] = {"/test_opcode.ch8", "/pong.ch8"};
 static void start(void *params) {
   chip8 emulator;
   std::string rom_file = CONFIG_SPIFFS_BASE_DIR;
-  rom_file += TEST_ROM[1];
+  rom_file += TEST_ROM[ROM_SELECTION];
   emulator.load_memory(rom_file);
   TFTDisp::clearScreen();
   while (1) {
     emulator.step_one_cycle();
-    //To avoid drawing in every cycle
+    // To avoid drawing in every cycle
     if (emulator.get_display_flag()) {
       TFTDisp::drawGfx(emulator.get_display_pixels());
     }
     // Can do a yield(Faster) or task delay to avoid watchdog timeout
-    taskYIELD();
-    // vTaskDelay(10 / portTICK_PERIOD_MS);
+    /* taskYIELD(); */
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -98,12 +97,13 @@ static void start(void *params) {
   if (ret) {
     ESP_LOGE(FILE_TAG, "TFT display init failed %s\n", esp_err_to_name(ret));
   }
-  ret = ble_setup();
-  if (ret) {
-    ESP_LOGE(FILE_TAG, "%s BLE Setup failed", __func__);
-  }
+  /* ret = ble_setup(); */
+  /* if (ret) { */
+  /*     ESP_LOGE(FILE_TAG, "%s BLE Setup failed", __func__); */
+  /* } */
   ret = setup_fs();
   TFTDisp::drawCheck();
-  xTaskCreatePinnedToCore(start, "CHIP8", 20000, NULL, 5, NULL, 1);
+  xTaskCreatePinnedToCore(start, "CHIP8", 20000, NULL, configMAX_PRIORITIES - 1,
+                          NULL, 1);
   return ret;
 }

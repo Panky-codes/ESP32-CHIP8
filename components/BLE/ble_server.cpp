@@ -32,7 +32,7 @@ static constexpr int GATTS_CHAR_UUID_TEST_A = 0xFF01;
 static constexpr int GATTS_DESCR_UUID_TEST_A = 0x3333;
 static constexpr int GATTS_NUM_HANDLE_TEST_A = 4;
 
-static constexpr const char *TEST_DEVICE_NAME = "ESP_CHIP8 VM";
+static constexpr const char *TEST_DEVICE_NAME = "ESP32-CHIP8";
 static constexpr int TEST_MANUFACTURER_DATA_LEN = 17;
 
 // static std::map<uint8_t, BLEService *> m_service_ptr;
@@ -215,7 +215,7 @@ void BLEService::onRead(uint8_t value) {
 }
 
 void BLEService::onWrite(uint8_t value) {
-  if (xQueueSend(m_queue_handle, &value, 10 / portTICK_PERIOD_MS) != pdPASS) {
+  if (xQueueSend(m_queue_handle, &value, 1 / portTICK_PERIOD_MS) != pdPASS) {
     ESP_LOGI(FILE_TAG, "Failed to send the message\n");
   }
   ESP_LOGI(FILE_TAG, "On write executing! Sent %d", value);
