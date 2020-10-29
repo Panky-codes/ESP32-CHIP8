@@ -6,6 +6,7 @@ extern "C" {
 #include "freertos/queue.h"
 }
 #include <array>
+#include <optional>
 #include <cstdint>
 
 // Think of a better API
@@ -14,7 +15,7 @@ public:
   keyboard() = default;
   explicit keyboard(xQueueHandle numpad_ble);
   virtual bool isKeyVxPressed(const uint8_t &num);
-  virtual std::pair<bool, uint8_t> whichKeyIndexIfPressed();
+  virtual std::optional<uint8_t> whichKeyIndexIfPressed();
   virtual void clearKeyInput();
   virtual ~keyboard() = default;
 

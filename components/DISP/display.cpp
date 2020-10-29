@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <bitset>
 #include <cstdlib>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -99,12 +101,20 @@ static std::pair<int, int> transpose_xy(const int x, const int y) {
   return ret;
 }
 
+void TFTDisp::setLandscape() { TFT_setRotation(LANDSCAPE); }
+void TFTDisp::setPortrait() { TFT_setRotation(PORTRAIT); }
+
 void TFTDisp::clearScreen() { TFT_fillScreen(TFT_BLACK); }
 void TFTDisp::drawCheck() {
-  TFT_setFont(DEFAULT_FONT, NULL);
-  TFT_print("CHIP8 DISPLAY CHECK", CENTER, CENTER);
-  TFT_fillRect(0, 0, 4, 4, TFT_GREEN);
-  TFT_drawRect(0, 0, 4, 4, TFT_GREEN);
+  TFT_setRotation(LANDSCAPE);
+  int y = 4;
+  int f = COMIC24_FONT;
+  TFT_setFont(f, NULL);
+  TFT_print("Welcome to ESP32 CHIP8", CENTER, y);
+  y += TFT_getfontheight() + 4;
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  TFTDisp::clearScreen();
+  TFT_setRotation(PORTRAIT);
 }
 
 void TFTDisp::drawGfx(const std::array<uint8_t, display_size> &gfx) {
@@ -120,4 +130,26 @@ void TFTDisp::drawGfx(const std::array<uint8_t, display_size> &gfx) {
       }
     }
   }
+}
+
+// TODO: Change the hardcoded 2 to a const define
+void TFTDisp::displayOptions(const std::array<std::string_view, 2> &rom_list) {
+  int y = 4;
+  int f = COMIC24_FONT;
+  TFT_setFont(f, NULL);
+  TFT_print("Welcome to ESP32 CHIP8", CENTER, y);
+  y += TFT_getfontheight() + 4;
+  f = UBUNTU16_FONT;
+  TFT_print("Select an option", 4, y);
+  y += TFT_getfontheight() + 4;
+  f = DEJAVU18_FONT;
+  std::for_each(rom_list.begin(), rom_list.end(),
+                [i = 1, y](const auto &rom) mutable {
+                  std::ostringstream rom_w_index;
+                  rom_w_index << i << ". " << rom.substr(1);
+                  TFT_print(rom_w_index.str().c_str(), 4, y);
+                  y += TFT_getfontheight() + 4;
+                  ++i;
+                });
+  vTaskDelay(5000 / portTICK_PERIOD_MS);
 }

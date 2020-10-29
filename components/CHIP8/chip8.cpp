@@ -9,8 +9,8 @@ extern "C" {
 #include <algorithm>
 #include <cstdio>
 #include <fstream>
-#include <random>
 #include <string>
+#include <string_view>
 
 #include "ble_server.hpp"
 #include "chip8.hpp"
@@ -20,10 +20,12 @@ extern "C" {
 
 // static defines
 static constexpr const char *FILE_TAG = "CHIP8";
-static constexpr const char *TEST_ROM[] = {"/test_opcode.ch8", "/pong.ch8"};
+static constexpr int NR_OF_ROMS = 2;
+static constexpr std::array<std::string_view, NR_OF_ROMS> TEST_ROM = {
+    "/test_opcode.ch8", "/pong.ch8"};
 static constexpr int ROM_SELECTION = 1;
 // Setup BT, disp
-[[nodiscard]] static esp_err_t ble_setup(xQueueHandle& numpad) {
+[[nodiscard]] static esp_err_t ble_setup(xQueueHandle &numpad) {
   esp_err_t ret = ESP_OK;
   // I know this is a memory leak, but the lifetime of
   // the BLE server should last for the complete lifetime of BLE(bluedroid)
@@ -70,15 +72,32 @@ static constexpr int ROM_SELECTION = 1;
   return ret;
 }
 
-// [[nodiscard]] static esp_err_t select_option() {}
+static void get_option_selection(keyboard *numpad_handle, int &rom_selection) {
+  TFTDisp::setLandscape();
+  TFTDisp::displayOptions(TEST_ROM);
+  bool option_selected = false;
+  // Wait forever until a selection is made
+  while (!option_selected) {
+    const auto opt = numpad_handle->whichKeyIndexIfPressed();
+    if (opt && ((opt.value() <= NR_OF_ROMS) && (opt.value() != 0))) {
+      rom_selection = opt.value() - 1;
+      option_selected = true;
+    }
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
+  TFTDisp::setPortrait();
+}
 
 // Input could be the game, Queuehandle
 static void start(void *params) {
+  TFTDisp::clearScreen();
   xQueueHandle numpad_queue = params;
+  int rom_selection;
   std::unique_ptr<keyboard> numpad = std::make_unique<keyboard>(numpad_queue);
+  get_option_selection(numpad.get(), rom_selection);
   chip8 emulator{std::move(numpad)};
   std::string rom_file = CONFIG_SPIFFS_BASE_DIR;
-  rom_file += TEST_ROM[ROM_SELECTION];
+  rom_file += TEST_ROM[rom_selection];
   emulator.load_memory(rom_file);
   TFTDisp::clearScreen();
   while (1) {
@@ -88,7 +107,6 @@ static void start(void *params) {
       TFTDisp::drawGfx(emulator.get_display_pixels());
     }
     // Can do a yield(Faster) or task delay to avoid watchdog timeout
-    /* taskYIELD(); */
     vTaskDelay(2 / portTICK_PERIOD_MS);
   }
 }
@@ -107,7 +125,7 @@ static void start(void *params) {
   }
   ret = setup_fs();
   TFTDisp::drawCheck();
-  xTaskCreatePinnedToCore(start, "CHIP8", 20000, numpad, configMAX_PRIORITIES - 1,
-                          NULL, 1);
+  xTaskCreatePinnedToCore(start, "CHIP8", 20000, numpad,
+                          configMAX_PRIORITIES - 1, NULL, 1);
   return ret;
 }

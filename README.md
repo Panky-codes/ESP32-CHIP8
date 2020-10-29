@@ -12,4 +12,4 @@ I tested my implementation of OPCODES with the test ROM from [here](https://gith
 
 - [x] Finish up keyboard implementation
 - [x] Investigate the perf impact for delay more than 10ms and Freertos watch dog timer trigger
-- [ ] Make a startup screen
+- [x] Make a startup screen

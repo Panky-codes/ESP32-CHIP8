@@ -434,9 +434,9 @@ void chip8::step_one_cycle() {
     // OPCODE FX0A: Wait for a keypress and store the result in register VX
     else if (last_two_nibbles(opcode) == 0x0A) {
       const auto Vx = static_cast<uint8_t>((second_nibble(opcode) >> 8));
-      auto [isKeyPressed, index] = numpad->whichKeyIndexIfPressed();
-      if (isKeyPressed) {
-        V[Vx] = index;
+      auto index = numpad->whichKeyIndexIfPressed();
+      if (index) {
+        V[Vx] = index.value();
       } else {
         // reset the counter to repeat this opcode until key is pressed
         prog_counter = static_cast<uint16_t>(prog_counter - 2);

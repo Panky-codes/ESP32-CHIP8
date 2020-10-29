@@ -24,13 +24,14 @@ bool keyboard::isKeyVxPressed(const uint8_t &num) {
   return Keys[num];
 }
 
-std::pair<bool, uint8_t> keyboard::whichKeyIndexIfPressed() {
+std::optional<uint8_t> keyboard::whichKeyIndexIfPressed() {
+  storeKeyPress();
   auto *iter = std::find(Keys.begin(), Keys.end(), true);
   const auto dist = static_cast<uint8_t>(std::distance(Keys.begin(), iter));
   if (dist != Keys.size()) {
-    return std::pair<bool, uint8_t>{true, dist};
+    return dist;
   }
-  return std::pair<bool, uint8_t>{false, dist};
+  return std::nullopt;
 }
 
 void keyboard::clearKeyInput() {
