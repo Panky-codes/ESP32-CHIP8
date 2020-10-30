@@ -91,16 +91,36 @@ chip8::chip8() {
   std::copy_n(chip8_fonts.begin(), chip8_fonts.size(), memory.begin());
 }
 
-chip8::chip8(std::unique_ptr<keyboard> keyPtr) : chip8{} {
-  numpad = std::move(keyPtr);
-}
+// chip8::chip8(std::unique_ptr<keyboard> keyPtr) : chip8{} {
+//   numpad = std::move(keyPtr);
+// }
+
+chip8::chip8(keyboard *keyPtr) : chip8{} { numpad = keyPtr; }
 
 void chip8::load_memory(const std::vector<uint8_t> &rom_opcodes) {
   std::copy_n(rom_opcodes.begin(), rom_opcodes.size(),
               memory.begin() + prog_mem_begin);
 }
 
+void chip8::reset_internal_states() {
+  std::fill((memory.begin() + prog_mem_begin), memory.end(), 0);
+  std::fill_n(V.begin(), V.size(), 0);
+  std::fill_n(display.begin(), display.size(), 0);
+
+  // Clear the stack
+  std::stack<uint16_t> tmp_hw_stack;
+  hw_stack.swap(tmp_hw_stack);
+
+  I = 0;
+  prog_counter = prog_mem_begin;
+  delay_timer = 0;
+  sound_timer = 0;
+  isKeyBPressed = false;
+  isDisplaySet = false;
+}
+
 void chip8::load_memory(std::string_view file_name) {
+  reset_internal_states();
   std::ifstream file;
   std::vector<char> rom;
   file.open(file_name.data(), std::ios::binary | std::ios::ate);
@@ -119,7 +139,6 @@ void chip8::load_memory(std::string_view file_name) {
 }
 
 std::array<uint8_t, 16> chip8::get_V_registers() const { return V; }
-std::array<bool, 16> chip8::get_Keys_array() const { return Keys; }
 std::array<uint8_t, 4096> chip8::get_memory_dump() const { return memory; }
 std::stack<uint16_t> chip8::get_stack() const { return hw_stack; }
 

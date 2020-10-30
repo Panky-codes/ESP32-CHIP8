@@ -23,7 +23,8 @@ static constexpr const char *FILE_TAG = "CHIP8";
 static constexpr int NR_OF_ROMS = 2;
 static constexpr std::array<std::string_view, NR_OF_ROMS> TEST_ROM = {
     "/test_opcode.ch8", "/pong.ch8"};
-static constexpr int ROM_SELECTION = 1;
+enum class EMU_STATE { SELECT_OPTION, PLAY_GAME };
+
 // Setup BT, disp
 [[nodiscard]] static esp_err_t ble_setup(xQueueHandle &numpad) {
   esp_err_t ret = ESP_OK;
@@ -78,6 +79,7 @@ static void get_option_selection(keyboard *numpad_handle, int &rom_selection) {
   bool option_selected = false;
   // Wait forever until a selection is made
   while (!option_selected) {
+    numpad_handle->storeKeyPress();
     const auto opt = numpad_handle->whichKeyIndexIfPressed();
     if (opt && ((opt.value() <= NR_OF_ROMS) && (opt.value() != 0))) {
       rom_selection = opt.value() - 1;
@@ -90,24 +92,45 @@ static void get_option_selection(keyboard *numpad_handle, int &rom_selection) {
 
 // Input could be the game, Queuehandle
 static void start(void *params) {
-  TFTDisp::clearScreen();
   xQueueHandle numpad_queue = params;
   int rom_selection;
+  EMU_STATE state = EMU_STATE::SELECT_OPTION;
+
+  std::unique_ptr<ExitButton> exit_button = std::make_unique<ExitButton>();
   std::unique_ptr<keyboard> numpad = std::make_unique<keyboard>(numpad_queue);
-  get_option_selection(numpad.get(), rom_selection);
-  chip8 emulator{std::move(numpad)};
-  std::string rom_file = CONFIG_SPIFFS_BASE_DIR;
-  rom_file += TEST_ROM[rom_selection];
-  emulator.load_memory(rom_file);
-  TFTDisp::clearScreen();
+  numpad->addExitButtonObserver(exit_button.get());
+  chip8 emulator{numpad.get()};
+
   while (1) {
-    emulator.step_one_cycle();
-    // To avoid drawing in every cycle
-    if (emulator.get_display_flag()) {
-      TFTDisp::drawGfx(emulator.get_display_pixels());
+    switch (state) {
+    case EMU_STATE::SELECT_OPTION: {
+      TFTDisp::clearScreen();
+      get_option_selection(numpad.get(), rom_selection);
+      std::string rom_file = CONFIG_SPIFFS_BASE_DIR;
+      rom_file += TEST_ROM[rom_selection];
+      emulator.load_memory(rom_file);
+      TFTDisp::clearScreen();
+      state = EMU_STATE::PLAY_GAME;
+      break;
     }
-    // Can do a yield(Faster) or task delay to avoid watchdog timeout
-    vTaskDelay(2 / portTICK_PERIOD_MS);
+    case EMU_STATE::PLAY_GAME: {
+      while (!exit_button->isPressed()) {
+        emulator.step_one_cycle();
+        // To avoid drawing in every cycle
+        if (emulator.get_display_flag()) {
+          TFTDisp::drawGfx(emulator.get_display_pixels());
+        }
+        // Can do a yield(Faster) or task delay to avoid watchdog timeout
+        vTaskDelay(2 / portTICK_PERIOD_MS);
+        numpad->storeKeyPress();
+      }
+      exit_button->clearExitFlag();
+      state = EMU_STATE::SELECT_OPTION;
+      break;
+    }
+    default:
+      break;
+    }
   }
 }
 
@@ -124,7 +147,6 @@ static void start(void *params) {
     ESP_LOGE(FILE_TAG, "%s BLE Setup failed", __func__);
   }
   ret = setup_fs();
-  TFTDisp::drawCheck();
   xTaskCreatePinnedToCore(start, "CHIP8", 20000, numpad,
                           configMAX_PRIORITIES - 1, NULL, 1);
   return ret;
