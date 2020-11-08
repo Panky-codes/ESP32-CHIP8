@@ -9,9 +9,15 @@ public:
 
 class ExitButton : public IObserver {
 public:
-  bool isPressed() { return is_exit_pressed; }
+  bool isPressed() {
+    if (is_exit_pressed) {
+      //reset the exit button bool first
+      is_exit_pressed = false;
+      return true;
+    }
+    return is_exit_pressed;
+  }
   void update() { is_exit_pressed = true; }
-  void clearExitFlag() { is_exit_pressed = false; }
 
 private:
   bool is_exit_pressed = false;

@@ -87,10 +87,11 @@ static void get_option_selection(keyboard *numpad_handle, int &rom_selection) {
     }
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
+  // flush the key input
+  numpad_handle->clearKeyInput();
   TFTDisp::setPortrait();
 }
 
-// Input could be the game, Queuehandle
 static void start(void *params) {
   xQueueHandle numpad_queue = params;
   int rom_selection;
@@ -121,10 +122,11 @@ static void start(void *params) {
           TFTDisp::drawGfx(emulator.get_display_pixels());
         }
         // Can do a yield(Faster) or task delay to avoid watchdog timeout
-        vTaskDelay(2 / portTICK_PERIOD_MS);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
         numpad->storeKeyPress();
       }
-      exit_button->clearExitFlag();
+      // flush the key input
+      numpad->clearKeyInput();
       state = EMU_STATE::SELECT_OPTION;
       break;
     }

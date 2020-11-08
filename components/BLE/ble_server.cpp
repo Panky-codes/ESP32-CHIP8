@@ -202,6 +202,9 @@ esp_err_t BLEServer::addService(BLEService *service) {
 BLEService::BLEService(const std::string &service_name)
     : m_service_name{service_name}, is_device_connected{false} {
   m_queue_handle = xQueueCreate(5, sizeof(uint8_t));
+  if (m_queue_handle == NULL) {
+    ESP_LOGE(FILE_TAG, "Queue creation failed!");
+  }
   m_profile = {};
   // m_char_prop = 0;
 }
@@ -216,9 +219,9 @@ void BLEService::onRead(uint8_t value) {
 
 void BLEService::onWrite(uint8_t value) {
   if (xQueueSend(m_queue_handle, &value, 1 / portTICK_PERIOD_MS) != pdPASS) {
-    ESP_LOGI(FILE_TAG, "Failed to send the message\n");
+    ESP_LOGE(FILE_TAG, "Failed to send the message\n");
   }
-  ESP_LOGI(FILE_TAG, "On write executing! Sent %d", value);
+  ESP_LOGD(FILE_TAG, "On write executing! Received %d", value);
 }
 xQueueHandle BLEService::getQueueHandle() { return m_queue_handle; }
 
@@ -331,10 +334,10 @@ void BLEService::gatts_profile_a_event_handler(
     if (!param->write.is_prep) {
       // This is where the circular buffer insert goes
       onWrite(*(param->write.value));
-      ESP_LOGI(FILE_TAG, "GATT_WRITE_EVT, value len %d, value :%02x",
+      ESP_LOGD(FILE_TAG, "GATT_WRITE_EVT, value len %d, value :%02x",
                param->write.len, *(param->write.value));
       esp_log_buffer_hex(FILE_TAG, param->write.value, param->write.len);
-      ESP_LOGI(FILE_TAG, "Profile descr handle: %#x, Param handle: %#x",
+      ESP_LOGD(FILE_TAG, "Profile descr handle: %#x, Param handle: %#x",
                m_profile.descr_handle, param->write.handle);
       if (param->write.need_rsp) {
         esp_err_t send_rsp_err = esp_ble_gatts_send_response(

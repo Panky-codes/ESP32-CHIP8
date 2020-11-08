@@ -5,17 +5,18 @@ extern "C" {
 #include <algorithm>
 
 keyboard::keyboard(xQueueHandle numpad_ble) : m_numpad_ble{numpad_ble} {}
-// TODO: need to implement this function
+
 void keyboard::storeKeyPress() {
   uint8_t value = 0;
   if (xQueueReceive(m_numpad_ble, &value, (TickType_t)1)) {
-    ESP_LOGD("Keypad", "Key pressed : %#2x", value);
     // Ignore other values
     if (value <= 0xF) {
+      ESP_LOGD("Keypad", "Key pressed : %#2x", value);
       Keys[value] = true;
     }
-    //Exit key is pressed
-    if(value == 0xFF){
+    // Exit key is pressed
+    if (value == 0xFF) {
+      ESP_LOGD("Keypad", "Exit button pressed");
       m_exitButton->update();
     }
   }
@@ -24,20 +25,28 @@ void keyboard::storeKeyPress() {
 bool keyboard::isKeyVxPressed(const uint8_t &num) {
   // Not the most efficient. Map would be a better data structure
   // but this is done to improve testability with mocks
+  storeKeyPress();
+  if (Keys[num]) {
+    // reset the keys
+    Keys[num] = false;
+    return true;
+  }
   return Keys[num];
 }
 
 std::optional<uint8_t> keyboard::whichKeyIndexIfPressed() {
+  storeKeyPress();
   auto *iter = std::find(Keys.begin(), Keys.end(), true);
   const auto dist = static_cast<uint8_t>(std::distance(Keys.begin(), iter));
   if (dist != Keys.size()) {
+    // reset the Keys
+    Keys[dist] = false;
     return dist;
   }
   return std::nullopt;
 }
 
 void keyboard::clearKeyInput() {
-  // std::for_each(Keys.begin(), Keys.end(), [](auto &key) { key = false; });
   std::fill_n(Keys.begin(), Keys.size(), false);
 }
 

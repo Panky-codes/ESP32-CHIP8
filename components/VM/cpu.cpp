@@ -536,6 +536,4 @@ void chip8::step_one_cycle() {
     break;
   }
   }
-  // reset Key events
-  numpad->clearKeyInput();
 }
