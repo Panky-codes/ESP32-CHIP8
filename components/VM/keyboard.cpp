@@ -8,7 +8,7 @@ keyboard::keyboard(xQueueHandle numpad_ble) : m_numpad_ble{numpad_ble} {}
 
 void keyboard::storeKeyPress() {
   uint8_t value = 0;
-  if (xQueueReceive(m_numpad_ble, &value, (TickType_t)1)) {
+  if (xQueueReceive(m_numpad_ble, &value, (TickType_t)0)) {
     // Ignore other values
     if (value <= 0xF) {
       ESP_LOGD("Keypad", "Key pressed : %#2x", value);
@@ -21,10 +21,8 @@ void keyboard::storeKeyPress() {
     }
   }
 }
-// The caller should reset the events for Keys and isKeyBPressed
+
 bool keyboard::isKeyVxPressed(const uint8_t &num) {
-  // Not the most efficient. Map would be a better data structure
-  // but this is done to improve testability with mocks
   storeKeyPress();
   if (Keys[num]) {
     // reset the keys

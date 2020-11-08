@@ -121,8 +121,7 @@ static void start(void *params) {
         if (emulator.get_display_flag()) {
           TFTDisp::drawGfx(emulator.get_display_pixels());
         }
-        // Can do a yield(Faster) or task delay to avoid watchdog timeout
-        vTaskDelay(1 / portTICK_PERIOD_MS);
+        vTaskDelay(2 / portTICK_PERIOD_MS);
         numpad->storeKeyPress();
       }
       // flush the key input

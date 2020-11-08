@@ -1,3 +1,6 @@
+//I mostly wrapped the amazing gatts_demo.c example from 
+// https://github.com/espressif/esp-idf/blob/master/examples/bluetooth/bluedroid/ble/gatt_server/main/gatts_demo.c
+// into a C++ class and added some virtual function to be executed on write and read.
 // System headers
 #include <cstdio>
 #include <cstdlib>
@@ -34,8 +37,6 @@ static constexpr int GATTS_NUM_HANDLE_TEST_A = 4;
 
 static constexpr const char *TEST_DEVICE_NAME = "ESP32-CHIP8";
 static constexpr int TEST_MANUFACTURER_DATA_LEN = 17;
-
-// static std::map<uint8_t, BLEService *> m_service_ptr;
 
 static esp_ble_adv_data_t adv_data = {
     .set_scan_rsp = false,
@@ -206,15 +207,13 @@ BLEService::BLEService(const std::string &service_name)
     ESP_LOGE(FILE_TAG, "Queue creation failed!");
   }
   m_profile = {};
-  // m_char_prop = 0;
 }
 
 bool BLEService::isDeviceConnected() { return is_device_connected; }
 
 void BLEService::onRead(uint8_t value) {
   const char *str = m_service_name.c_str();
-  // std::cout << "Hello" << "\n" ;
-  ESP_LOGI(FILE_TAG, "On read executing! %s%d", str, value);
+  ESP_LOGD(FILE_TAG, "On read executing! %s%d", str, value);
 }
 
 void BLEService::onWrite(uint8_t value) {
@@ -286,7 +285,7 @@ void BLEService::gatts_profile_a_event_handler(
     esp_ble_gatts_cb_param_t *param) {
   switch (event) {
   case ESP_GATTS_REG_EVT: {
-    ESP_LOGI(FILE_TAG, "REGISTER_APP_EVT, status %d, app_id %d\n",
+    ESP_LOGD(FILE_TAG, "REGISTER_APP_EVT, status %d, app_id %d\n",
              param->reg.status, param->reg.app_id);
     m_profile.service_id.is_primary = true;
     m_profile.service_id.id.inst_id = 0x00;
@@ -317,7 +316,7 @@ void BLEService::gatts_profile_a_event_handler(
     break;
   }
   case ESP_GATTS_READ_EVT: {
-    ESP_LOGI(FILE_TAG, "GATT_READ_EVT, conn_id %d, trans_id %d, handle %d\n",
+    ESP_LOGD(FILE_TAG, "GATT_READ_EVT, conn_id %d, trans_id %d, handle %d\n",
              param->read.conn_id, param->read.trans_id, param->read.handle);
     esp_gatt_rsp_t rsp;
     memset(&rsp, 0, sizeof(esp_gatt_rsp_t));
@@ -329,14 +328,13 @@ void BLEService::gatts_profile_a_event_handler(
     break;
   }
   case ESP_GATTS_WRITE_EVT: {
-    ESP_LOGI(FILE_TAG, "GATT_WRITE_EVT, conn_id %d, trans_id %d, handle %d",
+    ESP_LOGD(FILE_TAG, "GATT_WRITE_EVT, conn_id %d, trans_id %d, handle %d",
              param->write.conn_id, param->write.trans_id, param->write.handle);
     if (!param->write.is_prep) {
-      // This is where the circular buffer insert goes
       onWrite(*(param->write.value));
       ESP_LOGD(FILE_TAG, "GATT_WRITE_EVT, value len %d, value :%02x",
                param->write.len, *(param->write.value));
-      esp_log_buffer_hex(FILE_TAG, param->write.value, param->write.len);
+      // esp_log_buffer_hex(FILE_TAG, param->write.value, param->write.len);
       ESP_LOGD(FILE_TAG, "Profile descr handle: %#x, Param handle: %#x",
                m_profile.descr_handle, param->write.handle);
       if (param->write.need_rsp) {
@@ -350,14 +348,6 @@ void BLEService::gatts_profile_a_event_handler(
       break;
     }
   case ESP_GATTS_EXEC_WRITE_EVT:
-    /* ESP_LOGI(FILE_TAG, "ESP_GATTS_EXEC_WRITE_EVT"); */
-    /* esp_ble_gatts_send_response(gatts_if, param->write.conn_id,
-     */
-    /*                             param->write.trans_id,
-     * ESP_GATT_OK,
-     */
-    /*                             NULL); */
-    /* example_exec_write_event_env(&a_prepare_write_env, param); */
     break;
   case ESP_GATTS_MTU_EVT:
     ESP_LOGI(FILE_TAG, "ESP_GATTS_MTU_EVT, MTU %d", param->mtu.mtu);
@@ -365,7 +355,7 @@ void BLEService::gatts_profile_a_event_handler(
   case ESP_GATTS_UNREG_EVT:
     break;
   case ESP_GATTS_CREATE_EVT: {
-    ESP_LOGI(FILE_TAG, "CREATE_SERVICE_EVT, status %d,  service_handle %d\n",
+    ESP_LOGD(FILE_TAG, "CREATE_SERVICE_EVT, status %d,  service_handle %d\n",
              param->create.status, param->create.service_handle);
     m_profile.service_handle = param->create.service_handle;
     m_profile.char_uuid.len = ESP_UUID_LEN_16;
@@ -390,7 +380,7 @@ void BLEService::gatts_profile_a_event_handler(
     uint16_t length = 0;
     const uint8_t *prf_char;
 
-    ESP_LOGI(FILE_TAG,
+    ESP_LOGD(FILE_TAG,
              "ADD_CHAR_EVT, status %d,  attr_handle %d, "
              "service_handle %d\n",
              param->add_char.status, param->add_char.attr_handle,
@@ -404,9 +394,9 @@ void BLEService::gatts_profile_a_event_handler(
       ESP_LOGE(FILE_TAG, "ILLEGAL HANDLE");
     }
 
-    ESP_LOGI(FILE_TAG, "the gatts demo char length = %x\n", length);
+    ESP_LOGD(FILE_TAG, "the gatts demo char length = %x\n", length);
     for (int i = 0; i < length; i++) {
-      ESP_LOGI(FILE_TAG, "prf_char[%x] =%x\n", i, prf_char[i]);
+      ESP_LOGD(FILE_TAG, "prf_char[%x] =%x\n", i, prf_char[i]);
     }
     esp_err_t add_descr_ret = esp_ble_gatts_add_char_descr(
         m_profile.service_handle, &m_profile.descr_uuid,
@@ -419,7 +409,7 @@ void BLEService::gatts_profile_a_event_handler(
   }
   case ESP_GATTS_ADD_CHAR_DESCR_EVT: {
     m_profile.descr_handle = param->add_char_descr.attr_handle;
-    ESP_LOGI(FILE_TAG,
+    ESP_LOGD(FILE_TAG,
              "ADD_DESCR_EVT, status %d, attr_handle %d, "
              "service_handle %d\n",
              param->add_char_descr.status, param->add_char_descr.attr_handle,
@@ -438,9 +428,6 @@ void BLEService::gatts_profile_a_event_handler(
     is_device_connected = true;
     esp_ble_conn_update_params_t conn_params = {0};
     memcpy(conn_params.bda, param->connect.remote_bda, sizeof(esp_bd_addr_t));
-    /* For the IOS system, please reference the apple official
-     * documents about the ble connection parameters restrictions.
-     */
     conn_params.latency = 0;
     conn_params.max_int = 0x20; // max_int = 0x20*1.25ms = 40ms
     conn_params.min_int = 0x10; // min_int = 0x10*1.25ms = 20ms
