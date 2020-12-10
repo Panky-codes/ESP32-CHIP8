@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <map>
 
 extern "C" {
 #include "freertos/FreeRTOS.h"
@@ -20,6 +21,12 @@ static constexpr const char *FILE_TAG = "DISP";
 static constexpr const spi_lobo_host_device_t SPI_BUS = TFT_HSPI_HOST;
 static constexpr int scale = 4;
 static std::bitset<display_size> disp_cache{0};
+
+static const std::map<std::string_view, std::string_view> rom2name{
+    {"test_opcode.ch8" , "Test ROM"},
+    {"pong.ch8" , "Pong"},
+    {"invaders.ch8" , "Space Invaders"},
+    {"tetris.ch8" , "Tetris"}};
 /*
 This function changes the reference axis based on the display midpoint in
 ILI9341 display which has a width of 240 pixels and height of 320 pixels The
@@ -132,8 +139,8 @@ void TFTDisp::drawGfx(const std::array<uint8_t, display_size> &gfx) {
   }
 }
 
-// TODO: Change the hardcoded 2 to a const define
-void TFTDisp::displayOptions(const std::array<std::string_view, 2> &rom_list) {
+// TODO: Make the rom list flexible by reading the file names from SPIFFS
+void TFTDisp::displayOptions(const std::vector<std::string_view> &rom_list) {
   int y = 4;
   int f = COMIC24_FONT;
   TFT_setFont(f, NULL);
@@ -146,7 +153,7 @@ void TFTDisp::displayOptions(const std::array<std::string_view, 2> &rom_list) {
   std::for_each(rom_list.begin(), rom_list.end(),
                 [i = 1, y](const auto &rom) mutable {
                   std::ostringstream rom_w_index;
-                  rom_w_index << i << ". " << rom.substr(1);
+                  rom_w_index << i << ". " << rom2name.at(rom.substr(1));
                   TFT_print(rom_w_index.str().c_str(), 4, y);
                   y += TFT_getfontheight() + 4;
                   ++i;

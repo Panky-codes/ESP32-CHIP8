@@ -20,9 +20,9 @@ extern "C" {
 
 // static defines
 static constexpr const char *FILE_TAG = "CHIP8";
-static constexpr int NR_OF_ROMS = 2;
-static constexpr std::array<std::string_view, NR_OF_ROMS> TEST_ROM = {
-    "/test_opcode.ch8", "/pong.ch8"};
+static const std::vector<std::string_view> TEST_ROM = {
+    "/test_opcode.ch8", "/pong.ch8", "/invaders.ch8", "/tetris.ch8"};
+static const int NR_OF_ROMS = TEST_ROM.size();
 enum class EMU_STATE { SELECT_OPTION, PLAY_GAME };
 
 // Setup BT, disp

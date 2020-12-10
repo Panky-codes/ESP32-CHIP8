@@ -2,6 +2,7 @@
 #define DISPLAY_HPP_
 
 #include <array>
+#include <vector>
 #include <string_view>
 extern "C" {
 #include "esp_log.h"
@@ -15,7 +16,7 @@ static constexpr int display_size = display_x * display_y;
 namespace TFTDisp {
 [[nodiscard]] esp_err_t init();
 void drawCheck();
-void displayOptions(const std::array<std::string_view, 2> &rom_list);
+void displayOptions(const std::vector<std::string_view> &rom_list);
 void clearScreen();
 void drawGfx(const std::array<uint8_t, display_size> &gfx);
 void setLandscape();
