@@ -151,5 +151,5 @@ void TFTDisp::displayOptions(const std::array<std::string_view, 2> &rom_list) {
                   y += TFT_getfontheight() + 4;
                   ++i;
                 });
-  vTaskDelay(5000 / portTICK_PERIOD_MS);
+  vTaskDelay(5 / portTICK_PERIOD_MS);
 }

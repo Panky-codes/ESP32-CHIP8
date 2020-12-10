@@ -135,7 +135,6 @@ static void start(void *params) {
   }
 }
 
-// TODO: If the initial conditions, return to main
 [[nodiscard]] esp_err_t CHIP8::run() {
   esp_err_t ret = ESP_OK;
   xQueueHandle numpad;
