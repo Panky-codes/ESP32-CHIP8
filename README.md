@@ -2,7 +2,7 @@ CHIP8 in ESP32
 ====================
 This is a port of my [CHIP8](https://github.com/Panky-codes/CHIP8) implementation in C++17 for ESP32 microcontroller.
 
-I have written a detailed article about this project in my [blog](https://pankajraghav.com).  The article can be found [here](https://pankajraghav.com/2020-12-12-CHIP8-ESP32).
+I have written a detailed article about this project in my [blog](https://pankajraghav.com).  The article can be found [here](https://pankajraghav.com/2020/12/12/CHIP8-ESP32.html).
 
 <p align="center">
   <img src="doc/final_working.jpg" width="50%" height="50%"/>  
